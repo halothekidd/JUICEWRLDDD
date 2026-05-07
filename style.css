@@ -1,1 +1,99 @@
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#0a0a0a;
+    color:white;
+}
 
+/* NAV */
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 20px;
+    background:#111;
+    border-bottom:1px solid #222;
+}
+
+.navbar button{
+    background:none;
+    border:none;
+    color:white;
+    margin:0 10px;
+    cursor:pointer;
+}
+
+/* CONTROLS */
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    padding:15px;
+}
+
+select, input, button{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #333;
+    background:#1a1a1a;
+    color:white;
+}
+
+/* STATS */
+.stats{
+    text-align:center;
+    color:#aaa;
+    padding:10px;
+    font-size:14px;
+}
+
+/* SONG LIST */
+.song-container{
+    height:55vh;
+    overflow-y:auto;
+    padding:10px;
+}
+
+.song{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px;
+    border-bottom:1px solid #222;
+}
+
+/* PLAYER */
+.player{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:#111;
+    border-top:1px solid #222;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 20px;
+}
+
+.vinyl{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#333;
+    animation:spin 5s linear infinite;
+}
+
+@keyframes spin{
+    100%{transform:rotate(360deg);}
+}
+
+.player-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.player-controls button{
+    margin:0 5px;
+}
