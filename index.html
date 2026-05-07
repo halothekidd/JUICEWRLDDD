@@ -1,224 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Juice WRLD Eras</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body{
-      background:#000;
-      color:white;
-      font-family:Arial, sans-serif;
-      margin:0;
-      padding:40px;
-    }
+<title>Juice WRLD Tracker</title>
 
-    h1{
-      text-align:center;
-      font-size:50px;
-      margin-bottom:40px;
-      letter-spacing:3px;
-    }
+<link rel="stylesheet" href="style.css">
+<script defer src="fetch-data.js"></script>
+<script defer src="player.js"></script>
+<script defer src="auth.js"></script>
+<script defer src="playlists.js"></script>
 
-    .container{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-      gap:20px;
-    }
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#0a0a0a;
+    color:white;
+}
 
-    .era{
-      background:#111;
-      border:1px solid #333;
-      border-radius:18px;
-      padding:20px;
-      transition:0.3s;
-    }
+/* TOP NAV */
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 20px;
+    background:#111;
+    border-bottom:1px solid #222;
+}
 
-    .era:hover{
-      transform:scale(1.03);
-      border-color:#999;
-    }
+.navbar button{
+    background:none;
+    border:none;
+    color:white;
+    margin:0 10px;
+    cursor:pointer;
+    font-size:14px;
+}
 
-    .era h2{
-      margin-top:0;
-      font-size:24px;
-      color:#b300ff;
-    }
+/* CONTROLS */
+.controls{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:20px;
+}
 
-    .era p{
-      color:#ccc;
-      line-height:1.5;
-    }
-  </style>
+select, input, button{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #333;
+    background:#1a1a1a;
+    color:white;
+}
+
+/* STATS */
+.stats{
+    text-align:center;
+    color:#aaa;
+    font-size:14px;
+    padding:10px;
+}
+
+/* SONG LIST */
+.song-container{
+    height:55vh;
+    overflow-y:auto;
+    padding:10px;
+    border-top:1px solid #222;
+}
+
+.song{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px;
+    border-bottom:1px solid #222;
+}
+
+/* LYRICS */
+.page{
+    display:none;
+    padding:20px;
+}
+
+/* PLAYER */
+.player{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:#111;
+    border-top:1px solid #222;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 20px;
+}
+
+.vinyl{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    background:#333;
+    animation:spin 5s linear infinite;
+}
+
+@keyframes spin{
+    100%{transform:rotate(360deg);}
+}
+
+.player-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.player-controls button{
+    margin:0 5px;
+}
+
+input[type=range]{
+    width:120px;
+}
+</style>
+
 </head>
+
 <body>
 
-  <h1>JUICE WRLD ERAS</h1>
+<!-- NAV -->
+<div class="navbar">
+    <div>
+        <button onclick="showPage('tracker')">Tracker</button>
+        <button onclick="showPage('lyrics')">Lyrics</button>
+        <button onclick="showPage('files')">Files</button>
+        <button onclick="showPage('player')">Music Player</button>
+        <button onclick="alert('Add your PayPal/CashApp link')">Support Us</button>
+    </div>
+</div>
 
-  <div class="container">
+<!-- CONTROLS -->
+<div class="controls">
 
-    <div class="era">
-      <h2>JUICED UP THE EP (2016)</h2>
-      <p>Early Juice WRLD era showcasing raw beginnings and melodic experimentation.</p>
+    <select id="era" onchange="filterSongs(this.value, document.getElementById('category').value)">
+        <option value="">Era</option>
+    </select>
+
+    <select id="category" onchange="filterSongs(document.getElementById('era').value, this.value)">
+        <option value="">Category</option>
+        <option value="released">Released</option>
+        <option value="unreleased">Unreleased</option>
+        <option value="unsurfaced">Unsurfaced</option>
+        <option value="studio_sessions">Studio Sessions</option>
+    </select>
+
+    <input placeholder="Search songs..." oninput="searchSongs(this.value)">
+
+    <button onclick="refreshAPI()">Refresh API</button>
+
+    <select onchange="sortSongs(this.value)">
+        <option value="default">Sort By</option>
+        <option value="dateSurfaced">Date Surfaced</option>
+        <option value="dateRecorded">Date Recorded</option>
+        <option value="length">Length</option>
+    </select>
+
+</div>
+
+<!-- STATS -->
+<div class="stats" id="stats">
+    Loading stats...
+</div>
+
+<!-- TRACKER PAGE -->
+<div id="tracker" class="page" style="display:block;">
+    <div class="song-container" id="songList">
+        Loading songs...
+    </div>
+</div>
+
+<!-- LYRICS PAGE -->
+<div id="lyrics" class="page">
+    <input placeholder="Search lyrics..." style="width:100%;padding:10px;">
+    <div style="margin-top:20px;">Lyrics results appear here</div>
+</div>
+
+<!-- FILES PAGE -->
+<div id="files" class="page">
+    <h2>Files</h2>
+
+    <input placeholder="Search files..." style="width:100%;padding:10px;margin-bottom:10px;">
+
+    <div>
+        <p>Compilation</p>
+        <p>Footage</p>
+        <p>Original Files</p>
+        <p>Session Edits</p>
+        <p>Snippets</p>
+        <p>Older Snippets</p>
+        <p>Studio Sessions</p>
+    </div>
+</div>
+
+<!-- PLAYER PAGE -->
+<div id="player" class="page">
+    <h2>Music Player</h2>
+</div>
+
+<!-- PLAYER BAR -->
+<div class="player">
+
+    <div class="player-info">
+        <div class="vinyl" id="cover"></div>
+        <div>
+            <div id="title">Select a song</div>
+            <div style="font-size:12px;color:#aaa;">Unknown Artist</div>
+        </div>
     </div>
 
-    <div class="era">
-      <h2>Affliction (2017)</h2>
-      <p>Dark emotional underground sound with heavy pain-inspired themes.</p>
+    <div class="player-controls">
+        <button onclick="prevSong()">⏮</button>
+        <button onclick="togglePlay()">▶</button>
+        <button onclick="nextSong()">⏭</button>
     </div>
 
-    <div class="era">
-      <h2>Heartbroken In Hollywood 999 (2017)</h2>
-      <p>Heartbreak-focused era with emotional storytelling and melodic flows.</p>
-    </div>
+    <input type="range" id="seek">
+    <input type="range" id="volume">
 
-    <div class="era">
-      <h2>Juice WRLD 999 (2017)</h2>
-      <p>The foundation of the 999 identity and underground rise.</p>
-    </div>
-
-    <div class="era">
-      <h2>BINGEDRINKINGMUSIC (2017)</h2>
-      <p>Experimental SoundCloud-era tracks with darker vibes and energy.</p>
-    </div>
-
-    <div class="era">
-      <h2>NOTHING'S DIFFERENT </3 (2017)</h2>
-      <p>Sad melodic tracks focused on relationships, heartbreak, and emotions.</p>
-    </div>
-
-    <div class="era">
-      <h2>Goodbye & Good Riddance (2018)</h2>
-      <p>Breakout era featuring iconic heartbreak anthems and melodic rap.</p>
-    </div>
-
-    <div class="era">
-      <h2>WRLD On Drugs (2018)</h2>
-      <p>Collaborative psychedelic era with darker trap influences.</p>
-    </div>
-
-    <div class="era">
-      <h2>Death Race For Love (2019)</h2>
-      <p>Genre-bending emotional masterpiece blending rock, rap, and emo.</p>
-    </div>
-
-    <div class="era">
-      <h2>Outsiders</h2>
-      <p>Unreleased/concept era intended as Juice WRLD’s next major vision.</p>
-    </div>
-
-    <div class="era">
-      <h2>Legends Never Die (2020)</h2>
-      <p>First posthumous album celebrating Juice WRLD’s legacy.</p>
-    </div>
-
-    <div class="era">
-      <h2>Fighting Demons</h2>
-      <p>Emotional posthumous project focused on mental struggles and legacy.</p>
-    </div>
-
-    <div class="era">
-      <h2>Fighting Demons (Digital Deluxe Edition)</h2>
-      <p>Expanded digital version featuring additional tracks and content.</p>
-    </div>
-
-    <div class="era">
-      <h2>Fighting Demons (Collector's Edition)</h2>
-      <p>Special collector-focused release with exclusive material.</p>
-    </div>
-
-    <div class="era">
-      <h2>The Pre Party</h2>
-      <p>Lead-up era teasing future releases and unheard music.</p>
-    </div>
-
-    <div class="era">
-      <h2>The Pre Party (Extended)</h2>
-      <p>Extended version containing additional tracks and previews.</p>
-    </div>
-
-    <div class="era">
-      <h2>The Party Never Ends</h2>
-      <p>Major posthumous era continuing Juice WRLD’s legacy and unreleased music.</p>
-    </div>
-
-    <div class="era">
-      <h2>The Party Never Ends 2.0</h2>
-      <p>Expanded continuation of TPNE featuring more unreleased content.</p>
-    </div>
-
-    <div class="era">
-      <h2>Legends Never Die (5 Year Anniversary Edition)</h2>
-      <p>Anniversary edition celebrating the impact of Legends Never Die.</p>
-    </div>
-
-    <div class="era">
-      <h2>Goodbye & Good Riddance (Anniversary Edition)</h2>
-      <p>Expanded anniversary version of the iconic debut album.</p>
-    </div>
-
-    <div class="era">
-      <h2>Goodbye & Good Riddance (5 Year Anniversary Edition)</h2>
-      <p>Special edition release honoring the album’s influence.</p>
-    </div>
-
-    <div class="era">
-      <h2>Mainstream</h2>
-      <p>Era representing Juice WRLD’s mainstream dominance and chart success.</p>
-    </div>
-
-    <div class="era">
-      <h2>Live</h2>
-      <p>Live performances, concerts, freestyles, and stage moments.</p>
-    </div>
-
-    <div class="era">
-      <h2>Smule</h2>
-      <p>Rare recordings and early performance-related content.</p>
-    </div>
-
-    <div class="era">
-      <h2>YouTube</h2>
-      <p>Music videos, leaks, snippets, and visual-era content.</p>
-    </div>
-
-    <div class="era">
-      <h2>SoundCloud</h2>
-      <p>Classic underground SoundCloud releases and early leaks.</p>
-    </div>
-
-    <div class="era">
-      <h2>KILL'S WRLD</h2>
-      <p>Dark alternate-style era concept with aggressive aesthetics.</p>
-    </div>
-
-    <div class="era">
-      <h2>Vinyl</h2>
-      <p>Physical vinyl editions and collector-focused releases.</p>
-    </div>
-
-    <div class="era">
-      <h2>TTZDRFL (TV)</h2>
-      <p>Death Race For Love Target/TV Version release variation.</p>
-    </div>
-
-    <div class="era">
-      <h2>WTLA</h2>
-      <p>Possibly referring to World Tour Los Angeles or related unreleased content.</p>
-    </div>
-
-    <div class="era">
-      <h2>LND (EOV)</h2>
-      <p>Extended or alternate version of Legends Never Die.</p>
-    </div>
-
-    <div class="era">
-      <h2>AGATS2 (AV)</h2>
-      <p>Alternate version of All Girls Are The Same 2 / Insecure featuring Nicki Minaj.</p>
-    </div>
-
-  </div>
+</div>
 
 </body>
 </html>
